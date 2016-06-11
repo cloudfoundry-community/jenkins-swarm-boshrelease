@@ -18,7 +18,7 @@ Before you run the build script ensure that you have the [Bosh CLI installed](ht
 
 > A 'clean-build' or 'clean-all' build will not only delete you release from Bosh Director but also delete your deployment
 
-# Deploy It
+## Deploy It
 
 You can use the sample manifest file to deploy this release to a [Bosh-Lite](https://github.com/cloudfoundry/bosh-lite) environment. Make sure that before you set the deployment and deploy, you update the manifest's ```director_uuid``` to match you Bosh Director's UUID.
 
