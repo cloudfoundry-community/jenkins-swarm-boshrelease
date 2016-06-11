@@ -1,0 +1,5 @@
+check process jenkins
+  with pidfile /var/vcap/sys/run/jenkins/jenkins.pid
+  start program "/var/vcap/packages/common/scripts/monit_debugger jenkins_ctl '/var/vcap/jobs/jenkins/bin/jenkins_ctl start'"
+  stop program "/var/vcap/packages/common/scripts/monit_debugger jenkins_ctl '/var/vcap/jobs/jenkins/bin/jenkins_ctl stop'"
+  group vcap

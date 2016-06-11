@@ -1,0 +1,99 @@
+#!/bin/bash -x
+
+set -e # exit immediately if a simple command exits with a non-zero status
+set -u # report the usage of uninitialized variables
+
+# Setup env vars and folders for the jenkins_ctl script
+source /var/vcap/packages/common/scripts/ctl_setup.sh 'jenkins'
+
+case $1 in
+
+  start)
+    redirect_output jenkins-start
+    pid_guard $JENKINS_PID_FILE $JOB_NAME
+
+    init=0
+    if [ ! -d $JENKINS_HOME/plugins ]; then
+
+      mkdir -p $JENKINS_HOME/plugins
+      for f in /var/vcap/packages/jenkins/plugins/*; do
+        filename=$(basename "$f")
+        name=${filename%.*}
+        cp $f $JENKINS_HOME/plugins/$name.jpi
+      done
+      if [ -n "$PLUGINS" ]; then
+        IFS=',' read -ra PLUGIN_LIST <<< "$PLUGINS"
+        $JOB_DIR/bin/install_jenkins_plugins.sh ${PLUGIN_LIST[*]}
+      fi
+      chown vcap:vcap -R $JENKINS_HOME
+
+      init=1
+    fi
+
+    flags=(
+      $JVM_ARGS
+      -jar /var/vcap/packages/jenkins/jenkins.war
+      $HTTP_LISTEN_ADDRESS
+      $HTTP_PORT
+      $HTTPS_PORT
+      $HTTPS_CERTIFICATE
+      $HTTPS_KEY
+      $ADMIN_USER_PASSWD
+    )
+
+    exec chpst -u vcap:vcap $JAVA_HOME/bin/java ${flags[*]} \
+       >>$LOG_DIR/$JOB_NAME.stdout.log \
+       2>>$LOG_DIR/$JOB_NAME.stderr.log &
+    echo $! > $JENKINS_PID_FILE
+
+    if [ $init -eq 1 ]; then
+
+      set +e
+      timeout=60
+      while [ $timeout -gt 0 ]; do
+        ((timeout--))
+        curl -L http://localhost:8080/api/json | grep '"nodeDescription":"the master Jenkins node"' 2>&1 > /dev/null
+        if [ $? == 0 ]; then
+          break;
+        fi
+        sleep 1
+      done
+      set -e
+
+      if [ $timeout -eq 0 ]; then
+        echo "WARN: Timeout waiting for Jenkins to startup. Jenkins could not be initialized."
+      else
+        # Update Jenkins plugins - some plugins get 
+        # overwritten by older plugins on initializtion
+        sleep 10
+        for f in /var/vcap/packages/jenkins/plugins/*; do
+          name=$(unzip -p $f META-INF/MANIFEST.MF | tr -d '\r' | awk '/Implementation-Title:/{ print $2 }')
+          version=$(unzip -p $f META-INF/MANIFEST.MF | tr -d '\r' | awk '/Implementation-Version:/{ print $2 }')
+          curl -X POST \
+            --header 'Content-Type: text/xml' \
+            -d "<install plugin=\"$name@$version\"/>" \
+            http://localhost:8080/pluginManager/installNecessaryPlugins 2>&1 > /dev/null
+        done
+
+        # Download Jenkins CLI
+        curl -o /var/vcap/packages/jenkins/jenkins-cli.jar -L http://localhost:8080/jnlpJars/jenkins-cli.jar
+        $JAVA_HOME/bin/java -jar /var/vcap/packages/jenkins/jenkins-cli.jar -s http://localhost:8080/ groovy $JOB_DIR/bin/create_users.groovy
+      fi
+
+      sleep 30
+      curl -X POST http://localhost:8080/restart
+    fi
+
+    ;;
+
+  stop)
+    redirect_output jenkins-stop
+    kill_and_wait $JENKINS_PID_FILE
+    ;;
+  *)
+    echo "Usage: jenkins_ctl {start|stop}"
+    ;;
+
+esac
+
+exit 0

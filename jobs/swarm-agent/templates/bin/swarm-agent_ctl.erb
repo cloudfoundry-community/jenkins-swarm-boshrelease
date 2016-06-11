@@ -1,0 +1,49 @@
+#!/bin/bash -x
+
+set -e # exit immediately if a simple command exits with a non-zero status
+set -u # report the usage of uninitialized variables
+
+# Setup env vars and folders for the swarm-agent_ctl script
+source /var/vcap/packages/common/scripts/ctl_setup.sh 'swarm-agent'
+
+case $1 in
+
+  start)
+    redirect_output swarm-agent-start
+    pid_guard $SWARM_AGENT_PID_FILE $JOB_NAME
+
+    flags=(
+      $JVM_ARGS
+      -jar /var/vcap/packages/swarm-agent/swarm-client.jar
+      $DISABLE_SSL_VERIFICATION
+      $NAME
+      $NUM_EXECUTORS
+      $LABELS
+      $AUTO_DISCOVERY
+      $JENKINS_URL
+      $SLAVE_USER_PASSWD
+    )
+
+    if [ ! -e /usr/bin/docker ]; then
+      ln -s /var/vcap/jobs/docker/packages/docker/bin/docker /usr/bin/docker
+    fi
+    export DOCKER_HOST="unix:///var/vcap/sys/run/docker/docker.sock"
+
+    exec chpst -u vcap:vcap $JAVA_HOME/bin/java ${flags[*]} \
+       >>$LOG_DIR/$JOB_NAME.stdout.log \
+       2>>$LOG_DIR/$JOB_NAME.stderr.log &
+    echo $! > $SWARM_AGENT_PID_FILE
+
+    ;;
+
+  stop)
+    redirect_output swarm-agent-stop
+    kill_and_wait $SWARM_AGENT_PID_FILE
+    ;;
+  *)
+    echo "Usage: jswarm-agent_ctl {start|stop}"
+    ;;
+
+esac
+
+exit 0

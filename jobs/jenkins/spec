@@ -1,0 +1,47 @@
+---
+name: jenkins
+
+packages:
+- common
+- jre
+- jenkins
+
+templates:
+  bin/jenkins_ctl.erb: bin/jenkins_ctl
+  bin/install_jenkins_plugins.sh: bin/install_jenkins_plugins.sh
+  bin/job_properties.sh.erb: bin/job_properties.sh
+  bin/create_users.groovy.erb: bin/create_users.groovy
+
+properties:
+  jenkins.master.jvm_args:
+    description: "Additional JVM arguments to use when starting up Jenkins master process."
+    default: "-XX:PermSize=128M -XX:MaxPermSize=512M -Xmn128M -Xms512M -Xmx1024M"
+  jenkins.master.listen_address:
+    description: "The IP Jenkins will bind to."
+    default: "0.0.0.0"
+  jenkins.master.http_port:
+    description: "HTTP port Jenkins will listen on."
+    default: "8080"
+  jenkins.master.https_port:
+    description: "HTTPS port Jenkins will listen on."
+  jenkins.master.https_certificate:
+    description: "The server certificate for https."
+  jenkins.master.https_key:
+    description: "The server key for https."
+  jenkins.master.admin_user:
+    description: "Admin user."
+    default: "admin"
+  jenkins.master.admin_password:
+    description: "Admin user's password."
+    default: "password"
+  jenkins.master.slave_user:
+    description: "User slave node uses to connect to Jenkins master."
+  jenkins.master.slave_password:
+    description: "Slave user's password."
+  jenkins.master.plugins:
+    description: "Comma separated list of plugins to install."
+    default: ""
+  jenkins.master.num_executors:
+    description: "Number of executors that will run builds."
+    default: "2"
+

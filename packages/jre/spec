@@ -1,0 +1,8 @@
+---
+name: jre
+
+dependencies: []
+
+files:
+- java/jre.tar.gz
+

@@ -1,0 +1,8 @@
+---
+name: jenkins
+
+dependencies: []
+
+files:
+- jenkins/jenkins.war
+- jenkins/plugins.tar.gz

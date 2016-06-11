@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+export LANG=en_US.UTF-8
+
+# job template binding variables
+
+# job name and index of this VM within cluster
+# e.g. JOB_NAME=jenkins, JOB_INDEX=0
+export NAME='<%= name %>'
+export JOB_INDEX=<%= index %>
+
+# full job name, like jenkins-master/0
+export JOB_FULL="$NAME/$JOB_INDEX"
+
+# jenkins pid file
+export JENKINS_PID_FILE=${RUN_DIR}/jenkins.pid
+
+# java jvm
+export JAVA_HOME="/var/vcap/packages/jre"
+export JVM_ARGS="<%= p('jenkins.master.jvm_args') %>"
+
+# jenkins home (read up by jenkins.war)
+export JENKINS_HOME=${STORE_DIR}
+
+# jenkins args
+export HTTP_LISTEN_ADDRESS="--httpListenAddress=<%= p('jenkins.master.listen_address') %>"
+export HTTP_PORT="--httpPort=<%= p('jenkins.master.http_port') %>"
+export HTTPS_PORT=""
+export HTTPS_CERTIFICATE=""
+export HTTPS_KEY=""
+export PLUGINS=""
+
+<% if_p('jenkins.master.admin_user', 'jenkins.master.admin_password') do |user, passwd| %>
+export ADMIN_USER_PASSWD="--argumentsRealm.passwd.<%= user %>=<%= passwd %> --argumentsRealm.roles.<%= user %>=admin"
+<% end %>
+
+<% if_p('jenkins.master.https_port') do |https_port| %>
+export HTTP_PORT="--httpPort=-1"
+export HTTPS_PORT="--httpsPort=<%= https_port %>"
+<% end %>
+
+<% if_p('jenkins.master.https_certificate') do |https_certificate| %>
+export HTTPS_CERTIFICATE="--httpsCertificate=/var/vcap/jobs/jenkins/bin/cert"
+<% File.open('/var/vcap/jobs/jenkins/bin/cert', 'w+') { |f| f.write(https_certificate) } %>
+<% end %>
+
+<% if_p('jenkins.master.https_key') do |https_key| %>
+export HTTPS_KEY="--httpsPrivateKey=/var/vcap/jobs/jenkins/bin/key"
+<% File.open('/var/vcap/jobs/jenkins/bin/key', 'w+') { |f| f.write(https_key) } %>
+<% end %>
+
+<% if_p('jenkins.master.plugins') do |plugins| %>
+export PLUGINS="<%= plugins %>"
+<% end %>

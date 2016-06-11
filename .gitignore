@@ -1,0 +1,8 @@
+.blobs/
+.dev_builds/
+.final_builds/
+.downloads/
+
+blobs/
+dev_releases/
+config/dev.yml

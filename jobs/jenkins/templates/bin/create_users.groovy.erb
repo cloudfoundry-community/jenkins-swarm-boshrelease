@@ -1,0 +1,31 @@
+import jenkins.model.*
+import hudson.security.*
+
+def instance = Jenkins.getInstance()
+instance.setNumExecutors(<%= p('jenkins.master.num_executors') %>)
+
+<% if_p('jenkins.master.admin_user', 'jenkins.master.admin_password') do |user, passwd| %>
+
+def hudsonRealm = new HudsonPrivateSecurityRealm(true)
+def strategy = new GlobalMatrixAuthorizationStrategy()
+
+hudsonRealm.createAccount("<%= user %>","<%= passwd %>")
+strategy.add(Jenkins.ADMINISTER, "<%= user %>")
+strategy.add(Jenkins.READ, "anonymous")
+
+<% if_p('jenkins.master.slave_user', 'jenkins.master.slave_password') do |slave_user, slave_passwd| %>
+hudsonRealm.createAccount("<%= slave_user %>","<%= slave_passwd %>")
+strategy.add(Permission.fromId("hudson.model.Computer.Build"), "<%= slave_user %>")
+strategy.add(Permission.fromId("hudson.model.Computer.Configure"), "<%= slave_user %>")
+strategy.add(Permission.fromId("hudson.model.Computer.Connect"), "<%= slave_user %>")
+strategy.add(Permission.fromId("hudson.model.Computer.Create"), "<%= slave_user %>")
+strategy.add(Permission.fromId("hudson.model.Computer.Delete"), "<%= slave_user %>")
+strategy.add(Permission.fromId("hudson.model.Computer.Disconnect"), "<%= slave_user %>")
+<% end %>
+
+instance.setSecurityRealm(hudsonRealm)
+instance.setAuthorizationStrategy(strategy)
+
+<% end %>
+
+instance.save()

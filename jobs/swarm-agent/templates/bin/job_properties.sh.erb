@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+export LANG=en_US.UTF-8
+
+# job template binding variables
+
+# job name and index of this VM within cluster
+# e.g. JOB_NAME=jenkins, JOB_INDEX=0
+export NAME='<%= name %>'
+export JOB_INDEX=<%= index %>
+
+# full job name, like jenkins-slave/0
+export JOB_FULL="$NAME/$JOB_INDEX"
+
+# jenkins pid file
+export SWARM_AGENT_PID_FILE=${RUN_DIR}/swarm-agent.pid
+
+# java jvm
+export JAVA_HOME="/var/vcap/packages/jre"
+
+export JVM_ARGS=""
+<% if_p('jenkins.slave.jvm_args') do |jvm_args| %>
+export JVM_ARGS="<%= jvm_args %>""
+<% end %>
+
+# jenkins home (read up by jenkins.war)
+export JENKINS_HOME=${STORE_DIR}
+
+# jenkins args
+export NAME="-name $NAME-$JOB_INDEX"
+export NUM_EXECUTORS="-executors <%= p('jenkins.slave.num_executors') %>"
+export LABELS="-labels <%= p('jenkins.slave.labels') %>"
+
+export DISABLE_SSL_VERIFICATION=""
+<% if_p('jenkins.slave.disable_ssl_verification') do |disable_ssl_verification| %>
+<% if disable_ssl_verification %>
+export DISABLE_SSL_VERIFICATION="-disableSslVerification"
+<% end %>
+<% end %>
+
+export AUTO_DISCOVERY=""
+<% if_p('jenkins.slave.auto_discovery_address') do |address| %>
+export AUTO_DISCOVERY="-autoDiscoveryAddress <%= address %>"
+<% end %>
+
+export JENKINS_URL=""
+<% if_p('jenkins.master.url') do |url| %>
+export JENKINS_URL="-master <%= url %>"
+<% end %>
+
+export SLAVE_USER_PASSWD=""
+<% if_p('jenkins.master.slave_user', 'jenkins.master.slave_password') do |user, passwd| %>
+export SLAVE_USER_PASSWD="-username <%= user %> -password <%= passwd %>"
+<% end %>

@@ -1,0 +1,6 @@
+set -e # exit immediately if a simple command exits with a non-zero status
+set -u # report the usage of uninitialized variables
+
+# Copy Bosh helper scripts
+echo "Copying common files..."
+cp -ra ${BOSH_COMPILE_TARGET}/common/* ${BOSH_INSTALL_TARGET}/

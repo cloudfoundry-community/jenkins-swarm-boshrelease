@@ -1,0 +1,32 @@
+---
+name: swarm-agent
+
+packages:
+- common
+- jre
+- swarm-agent
+
+templates:
+  bin/swarm-agent_ctl.erb: bin/swarm-agent_ctl
+  bin/job_properties.sh.erb: bin/job_properties.sh
+
+properties:
+  jenkins.slave.jvm_args:
+    description: "Additional JVM arguments to use when starting up Jenkins swarm client master process."
+  jenkins.slave.disable_ssl_verification:
+    description: "Disable SSL verification when accessing Jenkins HTTPS endpoint."
+    default: false
+  jenkins.slave.num_executors:
+    description: "Number of executors that will run builds on the slave."
+    default: "4"
+  jenkins.slave.labels:
+    description: "Labels that identify this slave."
+    default: "docker"
+  jenkins.slave.auto_discovery_address:
+    description: "Address for udp-based auto-discovery."
+  jenkins.master.url:
+    description: "Complete url to the jenkins master"
+  jenkins.master.slave_user:
+    description: "User slave node uses to connect to Jenkins master."
+  jenkins.master.slave_password:
+    description: "Slave user's password."

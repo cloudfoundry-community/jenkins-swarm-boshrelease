@@ -1,0 +1,7 @@
+---
+name: swarm-agent
+
+dependencies: []
+
+files:
+- jenkins/swarm-client.jar
