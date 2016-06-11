@@ -20,7 +20,13 @@ Before you run the build script ensure that you have the [Bosh CLI installed](ht
 
 ## Deploy It
 
-You can use the sample manifest file to deploy this release to a [Bosh-Lite](https://github.com/cloudfoundry/bosh-lite) environment. Make sure that before you set the deployment and deploy, you update the manifest's ```director_uuid``` to match you Bosh Director's UUID.
+You can use the sample manifest file to deploy this release to a [Bosh-Lite](https://github.com/cloudfoundry/bosh-lite) environment. Make sure that before you set the deployment and deploy, you update the manifest's ```director_uuid``` to match you Bosh Director's UUID. 
+
+You also need to upload the [docker bosh-release](https://github.com/cloudfoundry-community/docker-boshrelease) before you deploy using the given example manifest.
+
+```
+bosh upload release https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease
+```
 
 To build and deploy simply run.
 
