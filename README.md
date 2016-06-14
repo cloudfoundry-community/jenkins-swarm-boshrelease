@@ -35,3 +35,35 @@ bosh deployment example-manifests/jenkins-swarm-bosh-lite.yml
 ./build-local.sh
 bosh deploy
 ```
+
+## Test It
+
+To test simply login to [Jenkins](http://10.244.0.2:8080/) using admin/password as the login credentials and create a "pipeline" project. Use the following script to test the pipeline with docker.
+
+```
+node("docker") {
+    stage "Parallel Docker Pull"
+    def tasks = [:]
+    tasks["PullMavenImage"] = {
+        docker.image("maven").pull()
+    }
+    tasks["PullGoLangImage"] = {
+        docker.image("golang").pull()
+    }
+    parallel tasks
+    
+    stage "Checkout"
+    sh "docker run maven bash -c \"echo 'Checkouting the code' && ping -c 20 localhost\""
+
+    stage "Build"
+    sh "docker run golang echo 'Building the code'"
+}
+
+node("docker") {
+    stage "Deployment"
+    sh "docker run maven echo 'Deploying the code'"
+    
+    stage "Integration Tests"
+    sh "docker run maven echo 'Integration tests are running'"
+}
+```
