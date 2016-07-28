@@ -123,15 +123,16 @@ else
     cd $ROOTDIR
 fi
 
+set +e
 bosh releases | grep "docker" 2>&1 > /dev/null
 if [ $? == 1 ]; then
     bosh upload release https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease
 fi
+set -e
 
 # Build bosh release
 
 bosh create release --with-tarball --force --name jenkins-swarm
 bosh upload release
 
-set +e
 set +x
